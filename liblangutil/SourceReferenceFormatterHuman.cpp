@@ -22,6 +22,8 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
 #include <iomanip>
+#include <locale>
+#include <codecvt>
 
 using namespace std;
 using namespace solidity;
@@ -103,9 +105,14 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 		m_stream << leftpad << ' ';
 		frameColored() << '|';
 		m_stream << ' ';
+
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+		std::wstring wide = converter.from_bytes(_ref.text);
+		size_t refStartColumnUtf = _ref.startColumn - (_ref.text.size() - wide.size());
+
 		for_each(
-			_ref.text.cbegin(),
-			_ref.text.cbegin() + _ref.startColumn,
+			wide.cbegin(),
+			wide.cbegin() + refStartColumnUtf,
 			[this](char ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
 		);
 		diagColored() << string(locationLength, '^');
